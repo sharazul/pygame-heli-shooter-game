@@ -1,0 +1,136 @@
+import pygame
+import random
+import math
+
+pygame.init()
+screen = pygame.display.set_mode((800, 600))  # it set screen mode width and height
+pygame.display.set_caption('sharaz_game')
+icon1 = pygame.image.load('ufo.png')
+pygame.display.set_icon(icon1)
+
+# set background image
+background = pygame.image.load('background1.png')
+score = 0
+# player set
+playerimg = pygame.image.load('rr.png')
+pX = 350
+pY = 480
+p_cng = 0
+
+
+def player(x, y):
+    screen.blit(playerimg, (x, y))
+
+
+# add score
+score1 = 0
+font1 = pygame.font.Font('freesansbold.ttf', 32)
+tx = 10
+ty = 10
+
+
+def score(x, y):
+    score = font1.render('SCORE:-' + str(score1), True, (255, 0, 0))
+    screen.blit(score, (x, y))
+
+
+# enemy set
+enmeyimg = []
+eX = []
+eY = []
+ex_cng = []
+ey_cng = []
+no = 50
+for i in range(no):
+    enmeyimg.append(pygame.image.load('skull.png'))
+    eX.append(random.randint(0, 735))
+    eY.append(random.randint(50, 150))
+    ex_cng.append(3)  # change in x value
+    ey_cng.append(40)  # change in y value so enemy move downward
+
+
+def enemy(x, y, j):
+    screen.blit(enmeyimg[j], (x, y))
+
+
+# Add bullets in game
+bullet = pygame.image.load('bullets.png')
+bX = 0
+bY = 480
+bx_cng = 0  # change in x value
+by_cng = 20
+bullet_state = 'ready'
+
+
+def bullets(x, y):
+    global bullet_state
+    bullet_state = 'fire'
+    screen.blit(bullet, (x + 16, y + 10))
+
+
+# check for collision
+def iscollision(ex, ey, bx, by):
+    distance = math.sqrt((math.pow(ex - bx, 2)) + (math.pow(ey - by, 2)))
+    if distance < 27:
+        return True
+    else:
+        return False
+
+
+run = True
+while run:
+    screen.fill((0, 255, 120))
+    screen.blit(background, (0, 0))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                p_cng = -5
+            if event.key == pygame.K_RIGHT:
+                p_cng = 5
+            if event.key == pygame.K_SPACE:
+                bX = pX
+                bullets(bX, bY)
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                p_cng = 0.0
+
+    if pX <= 0:  ## set boundary for spaceship
+        pX = 0
+    if pX > 735:
+        pX = 735
+    pX = pX + p_cng
+    player(pX, pY)
+
+    # enemy boundary set
+    for i in range(no):
+        eX[i] += ex_cng[i]
+        if eX[i] > 750:
+            ex_cng[i] = -3
+            eY[i] += ey_cng[i]
+        elif eX[i] < 0:
+            ex_cng[i] = 3
+            eY[i] += ey_cng[i]
+        # collision check
+        collision = iscollision(eX[i], eY[i], bX, bY)
+        if collision:
+            bY = 480
+            bullet_state = 'ready'
+            score1 += 1
+            print(score)
+            eX[i] = random.randint(0, 800)
+            eY[i] = random.randint(50, 150)
+        enemy(eX[i], eY[i], i)
+
+    score(tx,ty)
+    # bullets movement
+    if bY <= 0:
+        bullet_state = 'ready'
+        bY = 480
+    if bullet_state is 'fire':
+        bullets(bX, bY)
+        bY -= by_cng
+
+
+    pygame.display.update()
